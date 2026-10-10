@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TalentGuard — Attrition Early-Warning System</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f4f6f8;--ink:#12202f;--mut:#475569;--line:#dbe2ea;--acc:#0f766e;--acc2:#b45309;--card:#fff;--glow1:#2dd4bf55;--glow2:#fbbf2455}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1626;--ink:#e8eef5;--mut:#a9b8c9;--line:#26385a;--acc:#2dd4bf;--acc2:#fbbf24;--card:#17273f}}
+:root[data-theme="dark"]{--bg:#0b1626;--ink:#e8eef5;--mut:#a9b8c9;--line:#26385a;--acc:#2dd4bf;--acc2:#fbbf24;--card:#17273f}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Helvetica Neue",Arial,system-ui,sans-serif;overflow:hidden}
+.orb{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;animation:float 14s ease-in-out infinite alternate}
+.o1{width:44vw;height:44vw;left:-10vw;top:-12vw;background:var(--glow1)}
+.o2{width:36vw;height:36vw;right:-8vw;bottom:-10vw;background:var(--glow2);animation-delay:-6s}
+@keyframes float{to{transform:translate(6vw,4vw) scale(1.15)}}
+#bar{position:fixed;left:0;top:0;height:4px;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .5s;z-index:5}
+.slide{position:absolute;inset:0;padding:clamp(20px,5vh,64px) clamp(20px,7vw,120px) 90px;display:flex;flex-direction:column;justify-content:center;gap:clamp(12px,2.4vh,26px);overflow-y:auto;opacity:0;pointer-events:none;transition:opacity .6s,transform .6s}
+.slide[data-s=prev]{transform:translateX(-6vw)}.slide[data-s=next]{transform:translateX(6vw)}
+.slide[data-s=cur]{opacity:1;transform:none;pointer-events:auto}
+.r{opacity:0}.slide[data-s=cur] .r{animation:rise .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*90ms)}
+@keyframes rise{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+.eyebrow{color:var(--acc);font-weight:700;font-size:clamp(12px,1.5vw,18px);letter-spacing:.12em}
+h1{font-size:clamp(44px,9vw,120px);margin:0;line-height:1;background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
+h2{font-size:clamp(28px,4.2vw,56px);margin:0;line-height:1.1}
+h3{margin:0 0 6px;font-size:clamp(16px,1.8vw,22px)}
+p{margin:0;color:var(--mut);line-height:1.45;font-size:clamp(14px,1.5vw,20px)}
+.lead{font-size:clamp(16px,2.2vw,28px);max-width:30em}
+.grid{display:grid;gap:clamp(10px,1.6vw,20px)}.g3{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}.g2{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.two{display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(14px,2.4vw,32px)}
+@media(max-width:900px){.two{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:clamp(14px,2vw,26px);transition:transform .25s,border-color .25s,box-shadow .25s}
+.card:hover{transform:translateY(-4px);border-color:var(--acc);box-shadow:0 12px 30px #0003}
+.big{font-size:clamp(36px,6vw,80px);font-weight:800;color:var(--acc2);line-height:1}
+.node{cursor:pointer;text-align:left;font:inherit;color:inherit}
+.node small{color:var(--acc);font-weight:700}
+.node.on{border-color:var(--acc);box-shadow:0 0 0 3px var(--glow1),0 12px 30px #0003;transform:translateY(-6px)}
+.flow{position:relative}.flow::before{content:"";position:absolute;left:0;top:50%;height:3px;width:var(--w,0%);background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .6s;border-radius:3px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:6px 14px;font-size:clamp(12px,1.3vw,16px);color:var(--ink);transition:.2s}
+.chip:hover{background:var(--acc);color:var(--bg);border-color:var(--acc)}
+.btn{font:inherit;cursor:pointer;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 14px}
+.btn:hover{border-color:var(--acc)}
+.list button{display:block;width:100%;text-align:left;font:inherit;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:8px;cursor:pointer;transition:.2s}
+.list button.on,.list button:hover{background:var(--card);border-color:var(--acc);transform:translateX(6px)}
+.list b{color:var(--acc);margin-right:8px}
+.panel{animation:rise .5s both}
+label{display:flex;justify-content:space-between;font-size:14px;color:var(--mut);margin-top:10px}
+label b{color:var(--ink)}
+input[type=range]{width:100%;accent-color:var(--acc)}
+.out{font-size:clamp(30px,4.5vw,56px);font-weight:800;color:var(--acc)}
+.ph{cursor:pointer}.ph .more{max-height:0;overflow:hidden;transition:max-height .4s,margin .4s;color:var(--acc2);font-weight:600}.ph.open .more{max-height:90px;margin-top:10px}
+.ph ul{margin:8px 0 0;padding-left:18px;color:var(--mut);font-size:clamp(13px,1.4vw,18px);line-height:1.5}
+.tag{font-weight:700;color:var(--acc2);font-size:13px}
+nav{position:fixed;left:0;right:0;bottom:env(safe-area-inset-bottom,0px);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px clamp(16px,4vw,48px);z-index:6}
+#dots{display:flex;gap:8px}#dots button{width:12px;height:12px;border-radius:50%;border:1px solid var(--acc);background:transparent;padding:0;cursor:pointer;transition:.3s}
+#dots button.on{background:var(--acc);width:34px;border-radius:8px}
+.hint{font-size:12px;color:var(--mut)}
+@media(max-width:700px){.hint{display:none}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01s!important;transition-duration:.01s!important}}
+</style>
+</head>
+<body>
+<div class="orb o1"></div><div class="orb o2"></div><div id="bar"></div>
+
+<section class="slide">
+<div class="eyebrow r">TECHNOVA SOLUTIONS · HR PEOPLE ANALYTICS</div>
+<h1 class="r">TalentGuard</h1>
+<p class="lead r">An early-warning system that predicts who will resign, explains why, and tells HR what to do about it.</p>
+<div class="grid g3">
+<div class="card r"><div class="big"><span data-count="16" data-suf="%">16%</span></div><p>of a 12,000-person workforce leaves every year</p></div>
+<div class="card r"><div class="big">6–9 mo</div><p>of salary lost with every single exit</p></div>
+<div class="card r"><div class="big"><span data-count="50">50</span></div><p>retention conversations HR can run per cycle</p></div>
+</div>
+<p class="r"><b style="color:var(--acc)">Built for the traps:</b> ID and constant columns, 1-in-6 class imbalance (accuracy misleads), and in-sample scoring (we score out-of-fold).</p>
+</section>
+
+<section class="slide">
+<div class="eyebrow r">ARCHITECTURE</div>
+<h2 class="r">From HR data to action plan</h2>
+<div class="flow r" id="flow"><div class="grid g3" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
+<button class="card node"><small>1 · DATA</small><h3>Prepare</h3><p>Clean and encode</p></button>
+<button class="card node"><small>2 · MODEL</small><h3>Predict</h3><p>XGBoost, out-of-fold risk</p></button>
+<button class="card node"><small>3 · EXPLAIN</small><h3>Explain</h3><p>Top-3 reasons per person</p></button>
+<button class="card node"><small>4 · ACT</small><h3>Recommend</h3><p>Driver → HR action</p></button>
+</div></div>
+<div class="card r panel" id="detail" style="min-height:90px"></div>
+<div class="r" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><button class="btn" id="replay">▶ Replay flow</button><span class="hint">Click any stage for details</span></div>
+<div class="chips r"><span class="chip">Overview</span><span class="chip">Watch list</span><span class="chip">Employee deep-dive</span><span class="chip">Cycle planner</span><span class="chip">Teams</span><span class="chip">Action tracker</span><span class="chip">HR Copilot</span></div>
+<p class="r"><b>Outputs:</b> top50_watchlist.csv · top10_recommendations.csv · PDF briefs · action log · Claude or rule-based copilot</p>
+</section>
+
+<section class="slide">
+<div class="eyebrow r">BUSINESS BENEFITS</div>
+<h2 class="r">Every avoided exit saves 6–9 months of salary</h2>
+<div class="two">
+<div class="grid g2" id="ben"></div>
+<div class="card r">
+<h3>Try the impact calculator <span class="tag">illustrative</span></h3>
+<label>Employees <b id="vE"></b></label><input type="range" id="e" min="2000" max="30000" step="500" value="12000">
+<label>Annual attrition <b id="vR"></b></label><input type="range" id="a" min="5" max="30" value="16">
+<label>Avg monthly salary <b id="vS"></b></label><input type="range" id="s" min="3000" max="12000" step="250" value="6500">
+<label>Exit cost (months of salary) <b id="vM"></b></label><input type="range" id="m" min="6" max="9" step="0.5" value="7.5">
+<label>Exits prevented by TalentGuard <b id="vP"></b></label><input type="range" id="p" min="1" max="30" value="10">
+<p style="margin-top:12px">Estimated yearly saving</p><div class="out" id="sav">$0</div>
+<p id="sub"></p></div></div>
+</section>
+
+<section class="slide">
+<div class="eyebrow r">WHAT WE BUILT AND ENHANCED</div>
+<h2 class="r">Beyond the brief</h2>
+<div class="two"><div class="list r" id="enl"></div><div class="card panel" id="enp"></div></div>
+<p class="r"><b style="color:var(--acc)">Also:</b> fairness toggle that removes Age, Gender and Marital status before training.</p>
+</section>
+
+<section class="slide">
+<div class="eyebrow r">FUTURE SCOPE</div>
+<h2 class="r">Where TalentGuard goes next</h2>
+<div class="grid g3">
+<div class="card ph r"><span class="tag">NEXT</span><h3>Make it production-ready</h3><ul><li>Calibrated probabilities and a threshold tuned to 50 talks</li><li>Permanent storage and role-based login</li><li>Real ManagerID hierarchy</li></ul><div class="more">Impact: reliable scores and secure, persistent data.</div></div>
+<div class="card ph r"><span class="tag">LATER</span><h3>Predict deeper</h3><ul><li>90-day window with monthly risk trends</li><li>Surveys, performance and exit-interview signals</li><li>Fairness audits across gender, age and marital status</li></ul><div class="more">Impact: earlier warnings from richer signals.</div></div>
+<div class="card ph r"><span class="tag">VISION</span><h3>Prevent, not just predict</h3><ul><li>Uplift modelling: which action works for whom</li><li>HRIS integration and manager nudges on Slack or email</li><li>Monitoring, retraining and a FastAPI / Docker service</li></ul><div class="more">Impact: retention actions proven to work, at scale.</div></div>
+</div>
+<h2 class="r" style="color:var(--acc2)">From prediction to prevention.</h2>
+<p class="r">TalentGuard turns attrition data into a clear list of who to talk to, why, and what to offer. <span class="hint">Click a card for its impact.</span></p>
+</section>
+
+<nav><button class="btn" id="pv" aria-label="Previous">←</button><div id="dots"></div><span class="hint">← → keys · swipe · T theme · F fullscreen</span><button class="btn" id="nx" aria-label="Next">→</button></nav>
+
+<script>
+const $=id=>document.getElementById(id),S=[...document.querySelectorAll('.slide')];
+const BEN=[["Focus HR time","The 50 talks go where a conversation matters most."],["Lower exit cost","Cost exposure and ROI of each action."],["Explainable","Plain-language reasons, not a black box."],["Actionable","Specific actions plus a one-page PDF brief."],["Systemic insight","Hot spots by department, role and tenure."],["Learning loop","Tracker logs what was done and who stayed."]];
+$('ben').innerHTML=BEN.map((b,i)=>`<div class="card r"><h3 style="color:var(--acc)">${b[0]}</h3><p>${b[1]}</p></div>`).join('');
+const EN=[["Honest scoring","5-fold out-of-fold risk, judged by PR-AUC and Precision@50 for a 1-in-6 problem.","Every employee is scored by a model that never saw them."],["What-if simulator","Change overtime, pay or promotion and see how an employee risk moves.","Re-scores one person with edited levers."],["Cycle planner","Best action per person, ranked by ROI within the talk count and budget.","Tests every lever, keeps the best payoff, fills the cycle."],["Team and manager view","Heat maps and team-level actions by department, role and manager tenure.","Finds root causes, not just individual cases."],["PDF briefs + tracker","One-page manager briefs, plus an action log that records outcomes.","Closes the loop: what was done, who stayed."],["AI HR copilot","Ask what to do for any employee: rule-based, or Claude for free-text questions.","Answers only from the model data; no invented numbers."]];
+$('enl').innerHTML=EN.map((e,i)=>`<button><b>0${i+1}</b>${e[0]}</button>`).join('');
+const eb=[...$('enl').children];
+function pickEn(i){eb.forEach((b,j)=>b.classList.toggle('on',i==j));const e=EN[i];$('enp').innerHTML=`<div class="panel"><span class="tag">0${i+1}</span><h2 style="font-size:clamp(22px,2.8vw,36px);margin:6px 0 10px">${e[0]}</h2><p>${e[1]}</p><p style="margin-top:12px;color:var(--ink)"><b style="color:var(--acc)">How:</b> ${e[2]}</p></div>`}
+eb.forEach((b,i)=>b.onclick=()=>pickEn(i));pickEn(0);
+const DET=["IBM HR CSV, 1,470 rows. Drop ID and constant columns, encode the target, scale numbers and one-hot encode categories.","XGBoost with class weighting; 5-fold out-of-fold probabilities give an honest risk score for every employee.","TreeSHAP shows what pushes each person risk up, merged into plain reasons like OverTime = Yes.","Each risk driver maps to an HR action: workload, pay, growth, flexibility or manager support."];
+const nodes=[...document.querySelectorAll('.node')];let T=[];
+function sel(i){nodes.forEach((n,j)=>n.classList.toggle('on',j==i));$('flow').style.setProperty('--w',((i+1)/nodes.length*100)+'%');const d=$('detail');d.style.animation='none';d.offsetWidth;d.style.animation='';d.innerHTML=`<p style="color:var(--ink)">${DET[i]}</p>`}
+function play(){T.forEach(clearTimeout);T=nodes.map((n,i)=>setTimeout(()=>sel(i),400+i*900))}
+nodes.forEach((n,i)=>n.onclick=()=>{T.forEach(clearTimeout);sel(i)});$('replay').onclick=play;
+const ids=['e','a','s','m','p'],tw={};
+function tween(el,v){const f=tw[el.id]||0,t0=performance.now();(function st(t){const k=Math.min(1,(t-t0)/500),x=f+(v-f)*k;el.textContent='$'+(x/1e6).toFixed(1)+'M';k<1?requestAnimationFrame(st):tw[el.id]=v})(t0)}
+function calc(){const [e,a,s,m,p]=ids.map(i=>+$(i).value),ex=e*a/100,cost=ex*s*m,sv=cost*p/100;
+$('vE').textContent=e.toLocaleString();$('vR').textContent=a+'%';$('vS').textContent='$'+s.toLocaleString();$('vM').textContent=m;$('vP').textContent=p+'%';
+tween($('sav'),sv);$('sub').textContent=`${Math.round(ex).toLocaleString()} exits a year cost about $${(cost/1e6).toFixed(1)}M; preventing ${p}% of them saves the amount above.`}
+ids.forEach(i=>$(i).oninput=calc);calc();
+document.querySelectorAll('.ph').forEach(c=>c.onclick=()=>c.classList.toggle('open'));
+function count(){document.querySelectorAll('[data-count]').forEach(el=>{const v=+el.dataset.count,s=el.dataset.suf||'',t0=performance.now();(function st(t){const k=Math.min(1,(t-t0)/1200);el.textContent=Math.round(v*(1-Math.pow(1-k,3)))+s;k<1&&requestAnimationFrame(st)})(t0)})}
+S.forEach(s=>s.querySelectorAll('.r').forEach((e,i)=>e.style.setProperty('--i',i)));
+const dots=$('dots');S.forEach((s,i)=>{const b=document.createElement('button');b.setAttribute('aria-label','Slide '+(i+1));b.onclick=()=>go(i);dots.append(b)});
+let cur=0;
+function go(n){n=Math.max(0,Math.min(S.length-1,n));cur=n;S.forEach((s,i)=>s.dataset.s=i<n?'prev':i>n?'next':'cur');[...dots.children].forEach((d,i)=>d.classList.toggle('on',i==n));$('bar').style.width=((n+1)/S.length*100)+'%';
+if(n==0)count();if(n==1){nodes.forEach(x=>x.classList.remove('on'));$('flow').style.setProperty('--w','0%');play()}if(n==2)calc()}
+$('pv').onclick=()=>go(cur-1);$('nx').onclick=()=>go(cur+1);
+addEventListener('keydown',e=>{if(e.target.matches('input'))return;if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();go(cur+1)}else if(['ArrowLeft','PageUp'].includes(e.key))go(cur-1);else if(e.key=='t'||e.key=='T'){const r=document.documentElement,d=matchMedia('(prefers-color-scheme:dark)').matches;r.dataset.theme=(r.dataset.theme||(d?'dark':'light'))=='dark'?'light':'dark'}else if(e.key=='f'||e.key=='F'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{})}});
+let x0=null;addEventListener('touchstart',e=>x0=e.touches[0].clientX,{passive:true});addEventListener('touchend',e=>{if(x0===null)return;const d=e.changedTouches[0].clientX-x0;if(Math.abs(d)>60)go(cur+(d<0?1:-1));x0=null});
+go(0);
+</script>
+</body>
+</html>
